@@ -1,3 +1,15 @@
+-- Clean up existing structures (Optional: remove if you want to keep data)
+DROP TABLE IF EXISTS task_comments CASCADE;
+DROP TABLE IF EXISTS activity_logs CASCADE;
+DROP TABLE IF EXISTS approvals CASCADE;
+DROP TABLE IF EXISTS tasks CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS task_status CASCADE;
+DROP TYPE IF EXISTS task_priority CASCADE;
+DROP TYPE IF EXISTS approval_status CASCADE;
+
 -- Enums
 CREATE TYPE user_role AS ENUM ('Admin', 'Manager', 'Member');
 CREATE TYPE task_status AS ENUM ('Pending', 'In Progress', 'Review', 'Completed');
@@ -51,17 +63,21 @@ CREATE TABLE activity_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Task Comments Table
+CREATE TABLE task_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- RLS Policies
 
--- Profiles: Users can view all profiles, but only update their own
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
--- Tasks: 
--- Everyone can view tasks. 
--- Creators and Assignees can update.
--- Managers and Admins can update any task.
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Tasks are viewable by everyone" ON tasks FOR SELECT USING (true);
 CREATE POLICY "Creators can insert tasks" ON tasks FOR INSERT WITH CHECK (auth.uid() = creator_id);
@@ -74,21 +90,19 @@ CREATE POLICY "Admins can delete tasks" ON tasks FOR DELETE USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'Admin')
 );
 
--- Approvals:
--- Viewable by everyone.
--- Only Managers/Admins can insert/update.
 ALTER TABLE approvals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Approvals are viewable by everyone" ON approvals FOR SELECT USING (true);
 CREATE POLICY "Managers and Admins can handle approvals" ON approvals FOR ALL USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('Admin', 'Manager'))
 );
 
--- Activity Logs:
--- Viewable by everyone.
--- System/Users can insert.
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Logs are viewable by everyone" ON activity_logs FOR SELECT USING (true);
 CREATE POLICY "Anyone can insert logs" ON activity_logs FOR INSERT WITH CHECK (true);
+
+ALTER TABLE task_comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Comments are viewable by everyone" ON task_comments FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert comments" ON task_comments FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Functions & Triggers
 
@@ -102,6 +116,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Check if trigger exists before creating
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
@@ -128,6 +144,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS tr_log_task_activity ON tasks;
 CREATE TRIGGER tr_log_task_activity
   AFTER INSERT OR UPDATE OR DELETE ON tasks
   FOR EACH ROW EXECUTE PROCEDURE public.log_task_activity();

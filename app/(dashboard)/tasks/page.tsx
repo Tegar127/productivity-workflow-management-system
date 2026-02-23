@@ -6,6 +6,7 @@ import { Task, Profile } from '@/types/database'
 import { TaskCard } from '@/components/TaskCard'
 import { calculateSmartPriority } from '@/utils/taskHelpers'
 import { Plus, Search, Filter } from 'lucide-react'
+import { CreateTaskModal } from '@/components/CreateTaskModal'
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -13,6 +14,8 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -21,6 +24,9 @@ export default function TasksPage() {
 
   async function fetchData() {
     setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+
     const [tasksRes, profilesRes] = await Promise.all([
       supabase
         .from('tasks')
@@ -64,11 +70,22 @@ export default function TasksPage() {
           <h2 className="text-2xl font-bold text-gray-800">Tasks Management</h2>
           <p className="text-sm text-gray-500">Manage and track your team's progress</p>
         </div>
-        <button className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Create Task
         </button>
       </div>
+
+      <CreateTaskModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchData}
+        profiles={profiles}
+        currentUserId={user?.id}
+      />
 
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
         <div className="relative flex-1">
@@ -107,6 +124,7 @@ export default function TasksPage() {
             <TaskCard 
               key={task.id} 
               task={task} 
+              currentUserId={user?.id}
               onUpdateStatus={handleUpdateStatus}
             />
           ))}

@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Productivity & Workflow Management System
 
-## Getting Started
+Sebuah aplikasi web fullstack profesional yang dirancang untuk membantu tim dalam mengelola tugas, workflow, approval bertingkat, dan analisis produktivitas berbasis data.
 
-First, run the development server:
+## 🌟 Fitur Utama
+- **Authentication & Role System**: Sistem login menggunakan Supabase Auth dengan tiga tingkatan role (Admin, Manager, Member) yang menentukan hak akses data dan wewenang approval.
+- **Task Management**: Pengelolaan tugas secara komprehensif (CRUD) dengan status workflow (Pending, In Progress, Review, Completed) dan tingkat prioritas.
+- **Smart Priority Engine**: Sistem cerdas yang menyesuaikan prioritas tugas secara otomatis berdasarkan kedekatan deadline (≤ 2 hari) dan durasi tugas yang belum dimulai.
+- **Multi-Level Approval**: Workflow persetujuan bertingkat di mana tugas tertentu memerlukan validasi dari Manager atau Admin sebelum dinyatakan selesai.
+- **Activity Log System**: Pencatatan transparan untuk setiap aktivitas sistem (Audit Trail) yang mencatat user, aksi, target, dan waktu kejadian.
+- **Dashboard Analytics**: Visualisasi data produktivitas menggunakan Chart.js, mencakup distribusi status tugas dan grafik penyelesaian mingguan.
+- **Task Discussion**: Fitur komentar pada setiap tugas untuk mendukung kolaborasi tim secara langsung.
+- **Row Level Security (RLS)**: Keamanan tingkat database yang memastikan privasi dan integritas data berdasarkan profil pengguna.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Tech Stack
+- **Frontend**: Next.js (App Router), Tailwind CSS, Lucide React, Chart.js.
+- **Backend**: Supabase (PostgreSQL, Auth, RLS).
+- **Logic**: Smart Priority Engine di sisi client dan Activity Logging via PostgreSQL Triggers.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🏗️ Arsitektur Folder
+- `/app`: Routing utama aplikasi (Dashboard, Tasks, Approvals, Logs, Login).
+- `/components`: Komponen UI modular (Charts, Modals, Cards, Sidebar, Navbar).
+- `/utils`: Konfigurasi Supabase, middleware, dan helper logika bisnis.
+- `/supabase`: SQL Schema, definisi Enum, dan kebijakan RLS.
+- `/types`: Definisi tipe data TypeScript untuk konsistensi sistem.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📊 Database Schema
+Sistem menggunakan PostgreSQL dengan struktur relasional:
+- `profiles`: Data pengguna dan role.
+- `tasks`: Entitas tugas utama.
+- `approvals`: Riwayat persetujuan tugas.
+- `activity_logs`: Log audit sistem.
+- `task_comments`: Data diskusi pada tugas.

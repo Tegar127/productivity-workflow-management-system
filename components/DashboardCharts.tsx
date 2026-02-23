@@ -33,9 +33,10 @@ interface DashboardChartsProps {
     review: number
     completed: number
   }
+  weeklyData?: number[]
 }
 
-export function DashboardCharts({ statusData }: DashboardChartsProps) {
+export function DashboardCharts({ statusData, weeklyData }: DashboardChartsProps) {
   const doughnutData = {
     labels: ['Pending', 'In Progress', 'Review', 'Completed'],
     datasets: [
@@ -57,8 +58,9 @@ export function DashboardCharts({ statusData }: DashboardChartsProps) {
     datasets: [
       {
         label: 'Tasks Completed',
-        data: [12, 19, 3, 5, 2, 3, 7],
+        data: weeklyData || [0, 0, 0, 0, 0, 0, 0],
         backgroundColor: '#6366f1',
+        borderRadius: 4,
       },
     ],
   }

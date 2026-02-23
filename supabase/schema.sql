@@ -109,12 +109,29 @@ CREATE POLICY "Anyone can insert comments" ON task_comments FOR INSERT WITH CHEC
 -- Automatically create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  assigned_role user_role;
 BEGIN
+  -- Safe role assignment with fallback
+  BEGIN
+    assigned_role := (new.raw_user_meta_data->>'role')::user_role;
+  EXCEPTION WHEN others THEN
+    assigned_role := 'Member';
+  END;
+
   INSERT INTO public.profiles (id, email, full_name, role)
-  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name', COALESCE((new.raw_user_meta_data->>'role')::user_role, 'Member'));
+  VALUES (
+    new.id, 
+    new.email, 
+    COALESCE(new.raw_user_meta_data->>'full_name', ''), 
+    COALESCE(assigned_role, 'Member')
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ensure the function is accessible
+ALTER FUNCTION public.handle_new_user() SET search_path = public;
 
 -- Check if trigger exists before creating
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

@@ -25,6 +25,33 @@ export function CreateTaskModal({ isOpen, onClose, onSuccess, profiles, currentU
 
   if (!isOpen) return null
 
+  if (!currentUserId) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl text-center space-y-6">
+          <div className="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+            <ShieldCheck className="text-indigo-600 h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-slate-900">Authentication Required</h3>
+            <p className="text-slate-500 text-sm">Please sign in to your account to create and manage tasks.</p>
+          </div>
+          <div className="flex flex-col space-y-3">
+            <button 
+              onClick={() => window.location.href = '/login'}
+              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+            >
+              Sign In Now
+            </button>
+            <button onClick={onClose} className="text-slate-500 text-sm font-medium hover:text-slate-800">
+              Maybe later
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
